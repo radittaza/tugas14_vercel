@@ -1,8 +1,7 @@
 // prisma/schema.prisma
 datasource db {
   provider = "postgresql"
-  url = env("postgresql://neondb_owner:CwI9xZkzcdP2@ep-dawn-feather-a14b5vq8.ap-southeast-1.aws.neon.tech/neondb?sslmode=require")
-  directUrl = env("https://console.neon.tech/app/projects/patient-river-34236447?database=neondb") // Tambahkan ini untuk Neon
+  url      = env("DATABASE_URL")
 }
 generator client {
   provider = "prisma-client-js"

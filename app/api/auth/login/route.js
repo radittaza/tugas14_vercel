@@ -4,13 +4,16 @@ import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
+    console.log('Attempting database connection...');
+    await prisma.$connect();
+    console.log('Database connected successfully');
 
-    // Validasi input
+    const { email, password } = await req.json();
+    console.log('Login attempt for:', email);
+
     if (!email || !password) {
       return NextResponse.json(
         { message: 'Missing required fields' },
@@ -18,7 +21,6 @@ export async function POST(req) {
       );
     }
 
-    // Cari user berdasarkan email
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -30,7 +32,6 @@ export async function POST(req) {
       );
     }
 
-    // Verifikasi password
     const isValid = await compare(password, user.password);
 
     if (!isValid) {
@@ -40,19 +41,20 @@ export async function POST(req) {
       );
     }
 
-    // Buat JWT token
     const token = sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     return NextResponse.json({ token });
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Internal server error', details: error.message },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
